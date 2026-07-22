@@ -1,0 +1,10 @@
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+pandas>=2.2.0
+
+# ── Google Sheets mode (DATA_SOURCE=google_sheets) ────────────────────────
+# Install these before running auth_setup.py and switching modes:
+#   pip install gspread google-auth-oauthlib apscheduler
+gspread>=6.0.0
+google-auth-oauthlib>=1.2.0
+apscheduler>=3.10.0

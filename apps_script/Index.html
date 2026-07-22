@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo Day Leaderboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0e1a;
+      --surface:  #111827;
+      --surface2: #1a2235;
+      --border:   #1f2d45;
+      --text:     #f0f4ff;
+      --muted:    #8b9ab5;
+      --gold:     #f5c842;
+      --silver:   #b0bec5;
+      --bronze:   #cd7f32;
+      --accent:   #6366f1;
+      --green:    #22c55e;
+      --amber:    #f59e0b;
+      --red:      #ef4444;
+    }
+
+    body {
+      font-family: "Inter", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(90deg, #111827, #1a1f35);
+      border-bottom: 1px solid var(--border);
+      padding: 22px 32px;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .header-inner {
+      max-width: 860px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 14px;
+    }
+    h1 {
+      font-size: 26px; font-weight: 800; letter-spacing: -0.5px;
+      background: linear-gradient(90deg, #818cf8, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .subtitle { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+    .refresh-btn {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 8px 14px; color: var(--muted);
+      font-size: 13px; font-family: inherit; cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      transition: background 0.2s;
+    }
+    .refresh-btn:hover { background: #243050; }
+    .refresh-btn.loading { opacity: 0.6; }
+    .spin { display: inline-block; }
+    .spin.active { animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      max-width: 860px; margin: 28px auto 0; padding: 0 24px;
+      display: flex; flex-wrap: wrap; gap: 12px;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 22px;
+      display: flex; align-items: center; gap: 12px; flex: 1; min-width: 150px;
+    }
+    .stat-icon { font-size: 26px; }
+    .stat-value { font-size: 22px; font-weight: 800; }
+    .stat-label { font-size: 11px; color: var(--muted); font-weight: 500; margin-top: 1px; }
+    .last-updated { font-size: 11px; color: var(--muted); text-align: right; margin-top: 6px; }
+
+    /* ── Main content ── */
+    main { max-width: 860px; margin: 0 auto; padding: 28px 24px 60px; }
+
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-size: 13px; font-weight: 700; color: var(--muted);
+      letter-spacing: 1px; text-transform: uppercase;
+    }
+    .entry-count { font-size: 12px; color: var(--muted); }
+
+    /* ── Leaderboard cards ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 18px 22px;
+      display: grid; grid-template-columns: 48px 1fr;
+      gap: 0 18px; align-items: center;
+      margin-bottom: 10px;
+      transition: transform 0.15s;
+      cursor: default;
+    }
+    .card:hover { transform: translateY(-2px); }
+    .card.rank-1 { background: linear-gradient(135deg,#111827,#1a2235); border-color: rgba(245,200,66,0.35); box-shadow: 0 0 22px rgba(245,200,66,0.12); }
+    .card.rank-2 { background: linear-gradient(135deg,#111827,#1a2235); border-color: rgba(176,190,197,0.3);  box-shadow: 0 0 18px rgba(176,190,197,0.10); }
+    .card.rank-3 { background: linear-gradient(135deg,#111827,#1a2235); border-color: rgba(205,127,50,0.3);  box-shadow: 0 0 18px rgba(205,127,50,0.10); }
+
+    /* Rank badge */
+    .rank-badge {
+      width: 44px; height: 44px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .rank-badge.medal { border: 2px solid; }
+    .rank-badge.number {
+      background: var(--surface2); border: 2px solid var(--border);
+      font-size: 13px; font-weight: 700; color: var(--muted);
+    }
+    .rank-1 .rank-badge { border-color: var(--gold);   background: rgba(245,200,66,0.12); }
+    .rank-2 .rank-badge { border-color: var(--silver); background: rgba(176,190,197,0.10); }
+    .rank-3 .rank-badge { border-color: var(--bronze); background: rgba(205,127,50,0.10); }
+
+    /* Card body */
+    .card-body { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .card-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .demo-name { font-size: 17px; font-weight: 800; }
+
+    /* Badges */
+    .badge {
+      font-size: 11px; font-weight: 600; border-radius: 99px;
+      padding: 2px 9px; border: 1px solid; white-space: nowrap;
+    }
+    .badge-floor-3  { color: #67e8f9; background: rgba(6,182,212,0.12);  border-color: rgba(6,182,212,0.35); }
+    .badge-floor-7  { color: #86efac; background: rgba(34,197,94,0.12);  border-color: rgba(34,197,94,0.35); }
+    .badge-floor-8  { color: #fda4af; background: rgba(244,63,94,0.12);  border-color: rgba(244,63,94,0.35); }
+    .badge-visits   { color: var(--muted); background: var(--surface2); border-color: var(--border); }
+
+    /* Score bar */
+    .score-row { display: flex; align-items: center; gap: 8px; }
+    .score-track {
+      flex: 1; height: 6px; background: var(--border);
+      border-radius: 99px; overflow: hidden; min-width: 60px;
+    }
+    .score-fill { height: 100%; border-radius: 99px; transition: width 0.7s ease; }
+    .score-value { font-size: 15px; font-weight: 700; min-width: 30px; text-align: right; }
+    .score-green  { color: var(--green);  }
+    .score-amber  { color: var(--amber);  }
+    .score-red    { color: var(--red);    }
+    .fill-green   { background: var(--green);  }
+    .fill-amber   { background: var(--amber);  }
+    .fill-red     { background: var(--red);    }
+
+    /* Aspect tags */
+    .aspects { display: flex; flex-wrap: wrap; gap: 5px; }
+    .aspect-tag {
+      font-size: 11px; font-weight: 500; border-radius: 99px;
+      padding: 2px 9px; white-space: nowrap;
+      background: rgba(99,102,241,0.12); color: #a5b4fc;
+      border: 1px solid rgba(99,102,241,0.28);
+    }
+
+    /* Error / empty */
+    .message {
+      text-align: center; padding: 60px 20px;
+      color: var(--muted); font-size: 15px;
+    }
+    .error-box {
+      background: #1f0a0a; border: 1px solid #7f1d1d;
+      border-radius: 12px; padding: 14px 20px;
+      color: #fca5a5; font-size: 14px; margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div>
+      <h1>🏆 Demo Day Leaderboard</h1>
+      <p class="subtitle">Top 10 projects by average score &nbsp;·&nbsp; Live rankings</p>
+    </div>
+    <button class="refresh-btn" id="refreshBtn" onclick="refresh()">
+      <span class="spin" id="spinIcon">🔄</span>
+      <span id="refreshLabel">Refresh in 30s</span>
+    </button>
+  </div>
+</header>
+
+<div class="stats-bar" id="statsBar"></div>
+
+<main>
+  <div id="errorBox"></div>
+  <div class="section-header">
+    <span class="section-title">Top 10 Projects</span>
+    <span class="entry-count" id="entryCount"></span>
+  </div>
+  <div id="board"><div class="message">Loading…</div></div>
+</main>
+
+<script>
+  var countdown = 30;
+  var timer;
+
+  function floorBadge(demoId) {
+    var n = parseInt(demoId, 10);
+    if (isNaN(n)) return null;
+    if (n >= 1  && n <= 30)  return { label: "📍 3rd Floor", cls: "badge-floor-3" };
+    if (n >= 31 && n <= 60)  return { label: "📍 7th Floor", cls: "badge-floor-7" };
+    if (n >= 61 && n <= 100) return { label: "📍 8th Floor", cls: "badge-floor-8" };
+    return null;
+  }
+
+  function scoreColor(s) {
+    return s >= 8 ? "green" : s >= 5 ? "amber" : "red";
+  }
+
+  function medalEmoji(rank) {
+    return rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : null;
+  }
+
+  function rankBadgeHtml(rank) {
+    var emoji = medalEmoji(rank);
+    if (emoji) return '<div class="rank-badge medal">' + emoji + '</div>';
+    return '<div class="rank-badge number">#' + rank + '</div>';
+  }
+
+  function cardHtml(entry) {
+    var col    = scoreColor(entry.avgScore);
+    var pct    = (entry.avgScore / 10 * 100).toFixed(1);
+    var floor  = floorBadge(entry.demoId);
+    var rankCls = entry.rank <= 3 ? " rank-" + entry.rank : "";
+
+    var badges = "";
+    if (floor) badges += '<span class="badge ' + floor.cls + '">' + floor.label + "</span>";
+    badges += '<span class="badge badge-visits">' + entry.uniqueFeedbacks + " visit" + (entry.uniqueFeedbacks !== 1 ? "s" : "") + "</span>";
+
+    var aspects = "";
+    if (entry.topAspects && entry.topAspects.length) {
+      aspects = '<div class="aspects">' +
+        entry.topAspects.map(function(a) {
+          return '<span class="aspect-tag">' + escHtml(a) + "</span>";
+        }).join("") +
+        "</div>";
+    }
+
+    return '<div class="card' + rankCls + '">' +
+      rankBadgeHtml(entry.rank) +
+      '<div class="card-body">' +
+        '<div class="card-title">' +
+          '<span class="demo-name">Demo #' + escHtml(entry.demoId) + "</span>" +
+          badges +
+        "</div>" +
+        '<div class="score-row">' +
+          '<div class="score-track"><div class="score-fill fill-' + col + '" style="width:' + pct + '%"></div></div>' +
+          '<span class="score-value score-' + col + '">' + entry.avgScore.toFixed(1) + "</span>" +
+        "</div>" +
+        aspects +
+      "</div>" +
+    "</div>";
+  }
+
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function fmtTime(iso) {
+    if (!iso) return "";
+    try { return new Date(iso).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"}); }
+    catch(e) { return iso; }
+  }
+
+  function render(data) {
+    document.getElementById("errorBox").innerHTML = "";
+
+    if (data.error) {
+      document.getElementById("errorBox").innerHTML =
+        '<div class="error-box">⚠️ ' + escHtml(data.error) + "</div>";
+      document.getElementById("board").innerHTML = "";
+      return;
+    }
+
+    // Stats
+    var s = data.stats || {};
+    document.getElementById("statsBar").innerHTML =
+      statCard("📝", s.total || 0, "Total Submissions") +
+      statCard("🚀", s.projects || 0, "Projects Ranked") +
+      statCard("👥", s.voters || 0, "Unique Voters");
+
+    var statsBarEl = document.getElementById("statsBar");
+    var lu = document.createElement("p");
+    lu.className = "last-updated";
+    lu.style.cssText = "padding:0 0 0 4px;width:100%";
+    lu.textContent = data.lastUpdated ? "Last updated: " + fmtTime(data.lastUpdated) : "";
+    statsBarEl.appendChild(lu);
+
+    // Entry count
+    var lb = data.leaderboard || [];
+    document.getElementById("entryCount").textContent =
+      s.total + " deduplicated votes · " + lb.length + " shown";
+
+    // Board
+    if (!lb.length) {
+      document.getElementById("board").innerHTML = '<div class="message">No feedback data yet.</div>';
+      return;
+    }
+    document.getElementById("board").innerHTML = lb.map(cardHtml).join("");
+  }
+
+  function statCard(icon, value, label) {
+    return '<div class="stat-card">' +
+      '<span class="stat-icon">' + icon + "</span>" +
+      '<div><div class="stat-value">' + value + "</div>" +
+      '<div class="stat-label">' + label + "</div></div></div>";
+  }
+
+  function setLoading(on) {
+    var btn  = document.getElementById("refreshBtn");
+    var spin = document.getElementById("spinIcon");
+    btn.classList.toggle("loading", on);
+    spin.classList.toggle("active", on);
+  }
+
+  function refresh() {
+    clearInterval(timer);
+    setLoading(true);
+    document.getElementById("refreshLabel").textContent = "Refreshing…";
+
+    google.script.run
+      .withSuccessHandler(function(data) {
+        setLoading(false);
+        render(data);
+        startCountdown();
+      })
+      .withFailureHandler(function(err) {
+        setLoading(false);
+        document.getElementById("errorBox").innerHTML =
+          '<div class="error-box">⚠️ Failed to load data: ' + escHtml(String(err)) + "</div>";
+        startCountdown();
+      })
+      .getLeaderboardData();
+  }
+
+  function startCountdown() {
+    countdown = 30;
+    clearInterval(timer);
+    timer = setInterval(function() {
+      countdown--;
+      document.getElementById("refreshLabel").textContent = countdown > 0
+        ? "Refresh in " + countdown + "s"
+        : "Refreshing…";
+      if (countdown <= 0) {
+        clearInterval(timer);
+        refresh();
+      }
+    }, 1000);
+  }
+
+  // Boot
+  refresh();
+</script>
+</body>
+</html>
