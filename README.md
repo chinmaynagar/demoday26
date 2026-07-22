@@ -2,6 +2,8 @@
 
 <img width="1546" height="859" alt="Screenshot 2026-07-22 at 12 11 39 PM" src="https://github.com/user-attachments/assets/b9888ecb-c2e6-4954-9133-e43cf5d776e3" />
 
+<img width="1916" height="905" alt="Screenshot 2026-07-22 at 12 13 02 PM" src="https://github.com/user-attachments/assets/763e1be0-b3e0-49b9-af68-1dc2d116acb1" />
+
 
 Live leaderboard for Demo Day that ranks projects by audience feedback collected via a Google Form.
 
