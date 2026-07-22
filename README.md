@@ -1,5 +1,8 @@
 # Demo Day 26 — Leaderboard
 
+<img width="1546" height="859" alt="Screenshot 2026-07-22 at 12 11 39 PM" src="https://github.com/user-attachments/assets/b9888ecb-c2e6-4954-9133-e43cf5d776e3" />
+
+
 Live leaderboard for Demo Day that ranks projects by audience feedback collected via a Google Form.
 
 Two deployment modes are available depending on your setup:
